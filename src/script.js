@@ -36,10 +36,33 @@ const fog = new THREE.Fog('#262837', 1, 15)
 scene.fog = fog
 
 /**
+ * EnvMap
+ */
+const cubeTextureLoader = new THREE.CubeTextureLoader()
+
+const environmentMapTexture = cubeTextureLoader.load([
+    '/textures/environmentMaps/4/px.jpg',
+    '/textures/environmentMaps/5/nx.jpg',
+    '/textures/environmentMaps/4/py.jpg',
+    '/textures/environmentMaps/5/ny.jpg',
+    '/textures/environmentMaps/4/pz.jpg',
+    '/textures/environmentMaps/5/nz.jpg'
+])
+ 
+/**
  * Materials
  */
 const material = new THREE.MeshStandardMaterial({
-    color: new THREE.Color("rgb(65, 105, 225)")
+    color: new THREE.Color("#049ef4"),
+    roughness: 0,
+    metalness: 0.9,
+    envMap: environmentMapTexture,
+    //emissive: new THREE.Color("#049ef4"),
+})
+
+const materialPlane = new THREE.MeshStandardMaterial({
+    color: new THREE.Color("#049ef4"),
+    roughness: 1,
 })
 
 /**
@@ -62,7 +85,7 @@ const updateAllMaterials = () =>
  */
 const plane = new THREE.Mesh(
     new THREE.PlaneGeometry(window.innerWidth, window.innerHeight/2),
-    material
+    materialPlane
 )
 plane.rotation.x = - Math.PI * 0.5
 plane.rotation.z = - Math.PI * 0.25
@@ -84,20 +107,24 @@ gltfLoader.load(
         gltf.scene.position.set(0, - 4.5, 0)
         gltf.scene.rotation.y = Math.PI * 0.5
         scene.add(gltf.scene)
+        gltf.scene.traverse((o) => {
+            if (o.isMesh) o.material = material;
+          });
         updateAllMaterials()
 
-        gui.add(gltf.scene.rotation, 'y').min(- Math.PI).max(Math.PI).step(0.001).name('rotation')
+        //gui.add(gltf.scene.rotation, 'y').min(- Math.PI).max(Math.PI).step(0.001).name('rotation')
     }
 )
 
 /**
  * Lights
  */
-const directionalLight = new THREE.DirectionalLight('#ffffff', 7)
+const directionalLight = new THREE.DirectionalLight('#ffffff', 20)
 directionalLight.castShadow = true
 directionalLight.shadow.camera.far = 15
 directionalLight.shadow.mapSize.set(1024, 1024)
 directionalLight.shadow.normalBias = 0.05
+directionalLight.shadow.radius = 10
 directionalLight.position.set(0.33, 1.5, - 2.2)
 scene.add(directionalLight)
 
@@ -171,8 +198,6 @@ scene.add(camera)
 // Controls
 const controls = new OrbitControls(camera, canvas)
 controls.enableDamping = true
-
-
 
 /**
  * Animate
